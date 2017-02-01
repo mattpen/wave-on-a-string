@@ -17,6 +17,7 @@ define( function( require ) {
   var fps = 50;
 
   function WOASModel() {
+    var self = this;
     this.stepDt = 0;
     var Array = window.Float64Array || window.Array;
 
@@ -63,6 +64,23 @@ define( function( require ) {
 
     // set the string to 0 on mode changes
     this.modeProperty.lazyLink( this.manualRestart.bind( this ) );
+
+    var ws = new WebSocket( 'ws://127.0.0.1:12100' );
+    ws.onopen = function() {
+      console.log('ws connected');
+      self.modeProperty.set( 'oscillate' );
+      self.typeEndProperty.set( 'noEnd' );
+      self.amplitudeProperty.set( 0 );
+      self.frequencyProperty.set( 0.00 );
+      self.dampingProperty.set( 0 );
+      ws.addEventListener( 'message', function( event ) {
+        var newOSCMessage = JSON.parse( event.data );
+        console.log( newOSCMessage );
+        self.frequencyProperty.set( newOSCMessage.args[ 0 ] );
+        self.amplitudeProperty.set( newOSCMessage.args[ 1 ] );
+      } );
+    };
+    // }
   }
 
   inherit( Object, WOASModel, {
