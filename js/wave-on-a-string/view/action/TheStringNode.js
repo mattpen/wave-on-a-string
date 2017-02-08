@@ -17,12 +17,16 @@ define( function( require ) {
   var Circle = require( 'SCENERY/nodes/Circle' );
 
   function TheStringNode( model, frame, options ) {
+    var self = this;
     Node.call( this, { layerSplit: true } );
     var theStringShape = new Shape();
     var theStringPath = new Path( theStringShape, {
       stroke: '#F00'
     } );
     var theString = [];
+    var redString = [];
+    var blueString = [];
+
     this.addChild( theStringPath );
 
     theStringPath.computeShapeBounds = function() {
@@ -32,11 +36,17 @@ define( function( require ) {
     var highlightCircle = new Circle( options.radius * 0.3, { fill: '#fff', x: -0.45 * options.radius, y: -0.45 * options.radius } );
     var scale = 3;
     var redBead = new Circle( options.radius, { fill: 'red', stroke: 'black', lineWidth: 0.5, children: [ highlightCircle ], scale: scale } );
+    var blueBead = new Circle( options.radius, { fill: 'blue', stroke: 'black', lineWidth: 0.5, children: [ highlightCircle ], scale: scale } );
     var limeBead = new Circle( options.radius, { fill: 'lime', stroke: 'black', lineWidth: 0.5, children: [ highlightCircle ], scale: scale } );
 
     var redNode;
     redBead.toDataURL( function( url, x, y ) {
       redNode = new Image( url, { x: -x / scale, y: -y / scale, scale: 1 / scale } );
+    } );
+
+    var blueNode;
+    blueBead.toDataURL( function( url, x, y ) {
+      blueNode = new Image( url, { x: -x / scale, y: -y / scale, scale: 1 / scale } );
     } );
 
     var limeNode;
@@ -45,13 +55,46 @@ define( function( require ) {
     } );
 
     for ( var i = 0; i < model.yDraw.length; i++ ) {
-      var bead = ( i % 10 === 0 ) ? limeNode : redNode;
-      theString.push( new Node( { x: i * options.radius * 2, children: [ bead ] } ) );
+      var redStringBead = ( i % 10 === 0 ) ? limeNode : redNode;
+      redString.push( new Node( { x: i * options.radius * 2, children: [ redStringBead ] } ) );
     }
-    theString[ 0 ].scale( 1.2 );
-    this.addChild( new Node( { children: theString } ) );
+    redString[ 0 ].scale( 1.2 );
+
+    for ( var j = 0; j < model.yDraw.length; j++ ) {
+      var blueStringBead = ( j % 10 === 0 ) ? limeNode : blueNode;
+      blueString.push( new Node( { x: j * options.radius * 2, children: [ blueStringBead  ] } ) );
+    }
+    blueString[ 0 ].scale( 1.2 );
+
+    theString = blueString;
+
+    var blueStringNode = new Node( { children: blueString } );
+    var redStringNode = new Node( { children: redString } );
+
+    this.addChild( blueStringNode );
 
     this.mutate( options );
+
+    var ws = new WebSocket( 'ws://192.168.56.103:12100' );
+    ws.onopen = function() {
+      console.log('ws connected');
+      ws.addEventListener( 'message', function( event ) {
+        var newOSCMessage = JSON.parse( event.data );
+        switch ( newOSCMessage.args[2] ) {
+          case 1:
+            theString = redString;
+            self.removeChild( blueStringNode );
+            self.addChild( redStringNode );
+            break;
+          case 2:
+            theString = blueString;
+            self.removeChild( redStringNode );
+            self.addChild( blueStringNode );
+            break;
+          default:
+        }
+      } );
+    };
 
     function updateTheString() {
       theStringShape = new Shape();
