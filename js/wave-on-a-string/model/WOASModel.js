@@ -65,7 +65,7 @@ define( function( require ) {
     // set the string to 0 on mode changes
     this.modeProperty.lazyLink( this.manualRestart.bind( this ) );
 
-    var ws = new WebSocket( 'ws://192.168.56.103:12100' );
+    var ws = new WebSocket( 'ws://127.0.0.1:12100' );
     ws.onopen = function() {
       console.log('ws connected');
       self.modeProperty.set( 'oscillate' );
