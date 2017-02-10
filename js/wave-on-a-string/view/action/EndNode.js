@@ -39,6 +39,7 @@ define( function( require ) {
     this.addChild( ring_back );
     this.addChild( post );
     this.addChild( ring_front );
+    this.addChild( harmonicaNode );
     this.windowNode = windowNode;
 
     this.mutate( options );
@@ -77,7 +78,8 @@ define( function( require ) {
     post.setVisible( false );
     ring_front.setVisible( false );
     windowNode.setVisible( true );
-    
+    harmonicaNode.setVisible( false );
+
     var ws = new WebSocket( 'ws://127.0.0.1:12100' );
     ws.onopen = function() {
       console.log('ws connected');
