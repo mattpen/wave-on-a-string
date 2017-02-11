@@ -75,27 +75,6 @@ define( function( require ) {
 
     this.mutate( options );
 
-    var ws = new WebSocket( 'ws://192.168.56.103:12100' );
-    ws.onopen = function() {
-      console.log('ws connected');
-      ws.addEventListener( 'message', function( event ) {
-        var newOSCMessage = JSON.parse( event.data );
-        switch ( newOSCMessage.args[2] ) {
-          case 1:
-            theString = redString;
-            self.removeChild( blueStringNode );
-            self.addChild( redStringNode );
-            break;
-          case 2:
-            theString = blueString;
-            self.removeChild( redStringNode );
-            self.addChild( blueStringNode );
-            break;
-          default:
-        }
-      } );
-    };
-
     function updateTheString() {
       theStringShape = new Shape();
       theString[ 0 ].y = model.nextLeftY;

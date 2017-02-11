@@ -20,6 +20,10 @@ define( function( require ) {
   var ringFrontImage = require( 'image!WAVE_ON_A_STRING/ring_front.png' );
   var windowImage = require( 'image!WAVE_ON_A_STRING/window-back.png' );
   var harmonicaImage = require( 'image!WAVE_ON_A_STRING/harmonica.png' );
+  var slidewhistleImage = require( 'image!WAVE_ON_A_STRING/slidewhistle.png' );
+  var talkingImage = require( 'image!WAVE_ON_A_STRING/talking.png' );
+  var silenceImage = require( 'image!WAVE_ON_A_STRING/silence.png' );
+  var triangleImage = require( 'image!WAVE_ON_A_STRING/triangle.png' );
   var clampImage = require( 'image!WAVE_ON_A_STRING/clamp.png' );
 
   function EndNode( model, frame, options ) {
@@ -27,8 +31,14 @@ define( function( require ) {
     var clamp = new Image( clampImage, { x: -17, y: -31, scale: 0.4 } );
     var ring_back = new Node( { children: [ new Image( ringBackImage, { x: 5, y: -14 / 2, scale: 0.5 } ) ] } );
     var ring_front = new Node( { children: [ new Image( ringFrontImage, { x: 4.7, y: 0, scale: 0.5 } ) ] } );
+    console.log( Constants.windowScale );
+
     var windowNode = new Image( windowImage, { right: Constants.windowXOffset + Constants.windowShift, centerY: 0, scale: Constants.windowScale } );
-    var harmonicaNode = new Image( harmonicaImage, { right: Constants.windowXOffset + Constants.windowShift, centerY: 0, scale: Constants.windowScale } );
+    var harmonicaNode = new Image( harmonicaImage, { right: Constants.windowXOffset + Constants.windowShift, centerY: 0, scale: .15 } );
+    var slidewhistleNode = new Image( slidewhistleImage, { right: Constants.windowXOffset + Constants.windowShift, centerY: 0, scale: .4 } );
+    var talkingNode = new Image( talkingImage, { right: Constants.windowXOffset + Constants.windowShift, centerY: 0, scale: .1 } );
+    var silenceNode = new Image( silenceImage, { right: Constants.windowXOffset + Constants.windowShift, centerY: 0, scale: .4 } );
+    var triangleNode = new Image( triangleImage, { right: Constants.windowXOffset + Constants.windowShift, centerY: 0, scale: .3 } );
     var post = new Rectangle( -5, -130, 10, 260, {
       stroke: '#000',
       fill: Constants.postGradient,
@@ -40,6 +50,10 @@ define( function( require ) {
     this.addChild( post );
     this.addChild( ring_front );
     this.addChild( harmonicaNode );
+    this.addChild( slidewhistleNode );
+    this.addChild( talkingNode );
+    this.addChild( silenceNode );
+    this.addChild( triangleNode );
     this.windowNode = windowNode;
 
     this.mutate( options );
@@ -57,44 +71,36 @@ define( function( require ) {
       }
     } );
 
-    // model.typeEndProperty.link( function updateVisible( value ) {
-    //   clamp.setVisible( value === 'fixedEnd' );
-    //   ring_back.setVisible( value === 'looseEnd' );
-    //   post.setVisible( value === 'looseEnd' );
-    //   ring_front.setVisible( value === 'looseEnd' );
-    //   windowNode.setVisible( value === 'noEnd' );
-    //
-    //   if ( value === 'fixedEnd' ) {
-    //     // when moving to fixed, zero out the very end point
-    //     model.yNow[ model.nSegs - 1 ] = 0;
-    //     model.yDraw[ model.nSegs - 1 ] = 0;
-    //
-    //     model.yNowChanged.emit();
-    //   }
-    // } );
 
     clamp.setVisible( false );
     ring_back.setVisible( false );
     post.setVisible( false );
     ring_front.setVisible( false );
-    windowNode.setVisible( true );
+    windowNode.setVisible( false );
     harmonicaNode.setVisible( false );
+    slidewhistleNode.setVisible( false );
+    talkingNode.setVisible( false );
+    silenceNode.setVisible( true );
+    triangleNode.setVisible( false );
+
+    var imageNodes = [
+      silenceNode,
+      harmonicaNode,
+      slidewhistleNode,
+      triangleNode,
+      talkingNode
+    ];
 
     var ws = new WebSocket( 'ws://127.0.0.1:12100' );
     ws.onopen = function() {
       console.log('ws connected');
       ws.addEventListener( 'message', function( event ) {
         var newOSCMessage = JSON.parse( event.data );
-        switch ( newOSCMessage.args[2] ) {
-          case 1:
-            windowNode.setVisible( true );
-            harmonicaNode.setVisible( false );
-            break;
-          case 2:
-            windowNode.setVisible( false );
-            harmonicaNode.setVisible( true );
-            break;
-          default:
+        // console.log( event.data );
+        // console.log(imageNodes.length );
+        for ( var i = 0;  i < imageNodes.length; i++ ) {
+          // console.log( 'i: ', i, ' newarg: ', newOSCMessage.args[2] - 1 );
+          imageNodes[i].setVisible( newOSCMessage.args[2] - 1 === i );
         }
       } );
     };
